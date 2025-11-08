@@ -4249,6 +4249,11 @@ function PlayPageClient() {
           </div>
         </div>
 
+        {/* 一起观看 - 播放器下方工具栏与面板 */}
+        <div className='mt-4'>
+          <WatchPartyPanel />
+        </div>
+
         {/* 详情展示 */}
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           {/* 文字区 */}
@@ -4263,8 +4268,6 @@ function PlayPageClient() {
 
                   {/* 按钮组 */}
                   <div className='flex items-center justify-center md:justify-start gap-2 flex-wrap'>
-                    {/* 一起观看控制 */}
-                    <WatchPartyControl />
                     {/* 收藏按钮 */}
                     <button
                       onClick={(e) => {

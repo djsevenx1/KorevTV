@@ -48,7 +48,7 @@ export default function WatchPartyPanel() {
 
   const emit = (type: string, payload: Record<string, unknown>) => {
     if (!room) return;
-    fetch('/api/watchparty/emit', {
+    fetch('/api/watchparty/broadcast', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ room, type, sender: selfIdRef.current, payload })

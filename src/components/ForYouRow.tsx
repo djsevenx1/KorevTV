@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 
 import { getAllFavorites, getAllPlayRecords } from '@/lib/db.client';
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { Favorite, PlayRecord } from '@/lib/types';
 import ScrollableRow from '@/components/ScrollableRow';
 import SectionTitle from '@/components/SectionTitle';
@@ -37,18 +38,24 @@ export default function ForYouRow() {
     decayDays: 7,
     maxItems: 12,
   });
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const [fav, rec] = await Promise.all([
-          getAllFavorites(),
-          getAllPlayRecords(),
-        ]);
-        if (alive) {
-          setFavorites(fav || {});
-          setRecords(rec || {});
+        // 仅在已登录用户下尝试拉取个人数据，未登录直接跳过
+        const auth = getAuthInfoFromBrowserCookie();
+        const loggedIn = !!auth?.username;
+        if (loggedIn) {
+          const [fav, rec] = await Promise.all([
+            getAllFavorites(),
+            getAllPlayRecords(),
+          ]);
+          if (alive) {
+            setFavorites(fav || {});
+            setRecords(rec || {});
+          }
         }
       } catch {}
       // 拉取系统权重（若已配置）
@@ -68,6 +75,7 @@ export default function ForYouRow() {
           }
         }
       } catch {}
+      if (alive) setIsReady(true);
     })();
     return () => {
       alive = false;
@@ -150,6 +158,10 @@ export default function ForYouRow() {
 
     return list.slice(0, weights.maxItems);
   }, [favorites, records, weights]);
+
+  // 未准备好或没有可展示项时，不渲染该区块，避免影响首页加载
+  if (!isReady) return null;
+  if (!items.length) return null;
 
   return (
     <section className='mb-8'>

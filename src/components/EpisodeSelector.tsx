@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import ReactDefault from 'react';
 
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
@@ -654,9 +655,9 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                                       className={`bg-gray-500/10 dark:bg-gray-400/20 ${textColorClasses} px-1.5 py-0 rounded text-xs flex-shrink-0 min-w-[50px] text-center`}
                                     >
                                       {videoInfo.quality}
-                                    </div>
-                                  );
-                                }
+    </div>
+  );
+}
                               }
 
                               return null;

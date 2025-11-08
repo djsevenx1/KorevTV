@@ -2,12 +2,15 @@
 
 'use client';
 
-import Hls from 'hls.js';
-import { ChevronUp,Heart } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
+import Hls from 'hls.js';
+import { Heart, ChevronUp } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
+import EpisodeSelector from '@/components/EpisodeSelector';
+import NetDiskSearchResults from '@/components/NetDiskSearchResults';
+import PageLayout from '@/components/PageLayout';
+import SkipController, { SkipSettingsButton } from '@/components/SkipController';
 import artplayerPluginChromecast from '@/lib/artplayer-plugin-chromecast';
 import { ClientCache } from '@/lib/client-cache';
 import {
@@ -24,11 +27,7 @@ import {
 import { getDoubanDetails } from '@/lib/douban.client';
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
-
-import EpisodeSelector from '@/components/EpisodeSelector';
-import NetDiskSearchResults from '@/components/NetDiskSearchResults';
-import PageLayout from '@/components/PageLayout';
-import SkipController from '@/components/SkipController';
+import dynamic from 'next/dynamic';
 const WatchPartyPanel = dynamic(() => import('@/components/WatchPartyPanel'), { ssr: false });
 
 // 扩展 HTMLVideoElement 类型以支持 hls 属性
@@ -4233,6 +4232,8 @@ function PlayPageClient() {
                 : 'md:col-span-1 lg:opacity-100 lg:scale-100'
                 }`}
             >
+              {/* 液态玻璃容器包裹选集与换源区域 */}
+              <LiquidGlassContainer className='px-3 py-2 h-full flex flex-col overflow-hidden' roundedClass='rounded-2xl' intensity='high' shadow='2xl' border='subtle'>
               <EpisodeSelector
                 totalEpisodes={totalEpisodes}
                 episodes_titles={detail?.episodes_titles || []}
@@ -4247,6 +4248,7 @@ function PlayPageClient() {
                 sourceSearchError={sourceSearchError}
                 precomputedVideoInfo={precomputedVideoInfo}
               />
+              </LiquidGlassContainer>
             </div>
           </div>
         </div>

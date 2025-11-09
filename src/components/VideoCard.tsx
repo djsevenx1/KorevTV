@@ -129,6 +129,58 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const actualSearchType = isAggregate
     ? (actualEpisodes && actualEpisodes === 1 ? 'movie' : 'tv')
     : type;
+  // 派生类型（无type时按集数推断）
+  const derivedType = (type && type.trim() !== '')
+    ? type
+    : (actualEpisodes && actualEpisodes > 1 ? 'tv' : (actualEpisodes === 1 ? 'movie' : ''));
+  // 统一类型命名并准备徽章样式
+  const normalizeType = (t?: string) => {
+    const v = (t || '').toLowerCase();
+    if (v === 'show') return 'variety';
+    return v;
+  };
+  const normalizedType = normalizeType(derivedType);
+  const typeBadge = (() => {
+    switch (normalizedType) {
+      case 'movie':
+        return {
+          label: '电影',
+          icon: '🎬',
+          classes:
+            'bg-gradient-to-br from-red-500/95 via-rose-500/95 to-pink-600/95 group-hover:shadow-red-500/60 group-hover:ring-red-300/50',
+        };
+      case 'tv':
+        return {
+          label: '电视剧',
+          icon: '📺',
+          classes:
+            'bg-gradient-to-br from-blue-500/95 via-indigo-500/95 to-purple-600/95 group-hover:shadow-blue-500/60 group-hover:ring-blue-300/50',
+        };
+      case 'variety':
+        return {
+          label: '综艺',
+          icon: '🎤',
+          classes:
+            'bg-gradient-to-br from-orange-500/95 via-amber-500/95 to-yellow-600/95 group-hover:shadow-amber-500/60 group-hover:ring-amber-300/50',
+        };
+      case 'shortdrama':
+        return {
+          label: '短剧',
+          icon: '🎭',
+          classes:
+            'bg-gradient-to-br from-emerald-500/95 via-teal-500/95 to-cyan-600/95 group-hover:shadow-emerald-500/60 group-hover:ring-emerald-300/50',
+        };
+      case 'anime':
+        return {
+          label: '番剧',
+          icon: '🌀',
+          classes:
+            'bg-gradient-to-br from-violet-500/95 via-fuchsia-500/95 to-pink-600/95 group-hover:shadow-fuchsia-500/60 group-hover:ring-fuchsia-300/50',
+        };
+      default:
+        return null;
+    }
+  })();
 
   // 判断是否为即将上映（未发布的内容）
   const isUpcoming = remarks && remarks.includes('天后上映');
@@ -792,12 +844,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           )}
 
           {/* 类型徽章 - 左上角（电影/电视剧常显；样式与即将上映一致）*/}
-          {type && (type === 'movie' || type === 'tv') && (
+          {typeBadge && (
             <div
               className={`absolute top-2 left-2 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg ring-2 ring-white/30 transition-all duration-300 ease-out group-hover:scale-105 z-30 ${
-                type === 'movie'
-                  ? 'bg-gradient-to-br from-red-500/95 via-rose-500/95 to-pink-600/95 group-hover:shadow-red-500/60 group-hover:ring-red-300/50'
-                  : 'bg-gradient-to-br from-blue-500/95 via-indigo-500/95 to-purple-600/95 group-hover:shadow-blue-500/60 group-hover:ring-blue-300/50'
+                typeBadge.classes
               }`}
               style={{
                 WebkitUserSelect: 'none',
@@ -810,14 +860,34 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               }}
             >
               <span className="flex items-center gap-1">
-                <span className="text-[10px]">{type === 'movie' ? '🎬' : '📺'}</span>
-                {type === 'movie' ? '电影' : '电视剧'}{actualYear ? ` · ${actualYear}` : ''}
+                <span className="text-[10px]">{typeBadge.icon}</span>
+                {typeBadge.label}{actualYear ? ` · ${actualYear}` : ''}
               </span>
             </div>
           )}
 
           {/* 集数徽章 - 右下角显示 */}
-          {actualEpisodes && actualEpisodes > 1 && !isUpcoming && (
+          {(() => {
+            const extractUpdatedEpisodeCount = (r?: string): number | null => {
+              if (!r) return null;
+              const patterns = [
+                /更新(?:至|到)?\s*第?\s*(\d+)\s*(?:集|话)/i,
+                /更至\s*(\d+)\s*(?:集|话)/i,
+                /第\s*(\d+)\s*(?:集|话)[^，。]*更新/i,
+              ];
+              for (const p of patterns) {
+                const m = r.match(p);
+                if (m && m[1]) {
+                  const n = parseInt(m[1], 10);
+                  if (!Number.isNaN(n)) return n;
+                }
+              }
+              return null;
+            };
+            const updatedCount = extractUpdatedEpisodeCount(remarks);
+            const shouldShow = !isUpcoming && ((actualEpisodes && actualEpisodes > 1) || updatedCount !== null);
+            if (!shouldShow) return null;
+            return (
             <div
               className='absolute bottom-2 right-2 bg-gradient-to-br from-emerald-500/95 via-teal-500/95 to-cyan-600/95 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg ring-2 ring-white/30 transition-all duration-300 ease-out group-hover:scale-105 group-hover:shadow-emerald-500/60 group-hover:ring-emerald-300/50 z-30'
               style={{
@@ -832,25 +902,23 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             >
               <span className='flex items-center gap-1'>
                 <span className='text-[10px]'>📀</span>
-                {currentEpisode && currentEpisode > 0
-                  ? `第${currentEpisode}/${actualEpisodes}集`
-                  : `共${actualEpisodes}集`}
+                {isSeriesCompleted(remarks)
+                  ? `已完结 · 共${(actualEpisodes && actualEpisodes > 0) ? actualEpisodes : (updatedCount ?? '')}集`
+                  : updatedCount !== null
+                    ? `更新至 · 第${updatedCount}集`
+                    : `更新至 · ${actualEpisodes}集`}
               </span>
             </div>
-          )}
+            );
+          })()}
 
           {/* 年份徽章 - 仅在未显示类型徽章时显示 */}
-          {(!type || (type !== 'movie' && type !== 'tv')) && config.showYear && actualYear && actualYear !== 'unknown' && actualYear.trim() !== '' && (
+          {!typeBadge && config.showYear && actualYear && actualYear !== 'unknown' && actualYear.trim() !== '' && (
             <div
               className={`absolute left-2 bg-gradient-to-br from-indigo-500/90 via-purple-500/90 to-pink-500/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg ring-2 ring-white/30 transition-all duration-300 ease-out group-hover:scale-105 group-hover:shadow-purple-500/50 group-hover:ring-purple-300/50 ${
                 (() => {
                   let offset = 2; // 默认 top-2
-                  // 如果有即将上映的类型徽章
-                  if (type && (type === 'movie' || type === 'tv')) {
-                    offset += 46; // top-[48px]
-                  }
-                  // 如果有集数徽章
-                  // 移至右下角后不再影响顶部徽章布局
+                  // 顶部只有年份徽章，不受其他徽章影响
                   return `top-[${offset}px]`;
                 })()
               }`}

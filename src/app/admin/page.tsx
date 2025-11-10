@@ -4977,6 +4977,52 @@ const LiveSourceConfig = ({
     from: 'custom',
   });
 
+  // 测试解析预览状态
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewResult, setPreviewResult] = useState<{
+    url: string;
+    contentType?: string | null;
+    total: number;
+    groups: Array<{ name: string; count: number }>;
+    epgUrl?: string | null;
+  } | null>(null);
+
+  const handleTestParse = async (testUrl: string) => {
+    const url = (testUrl || '').trim();
+    if (!url) {
+      showError('请先填写源地址', showAlert);
+      return;
+    }
+    setPreviewOpen(true);
+    setPreviewLoading(true);
+    setPreviewError(null);
+    setPreviewResult(null);
+    try {
+      const resp = await fetch('/api/live/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data?.error || `解析失败: ${resp.status}`);
+      }
+      setPreviewResult({
+        url: data.url,
+        contentType: data.contentType,
+        total: data.total,
+        groups: Array.isArray(data.groups) ? data.groups : [],
+        epgUrl: data.epgUrl || null,
+      });
+    } catch (err) {
+      setPreviewError(err instanceof Error ? err.message : '解析失败');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   // dnd-kit 传感器
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -5288,15 +5334,24 @@ const LiveSourceConfig = ({
               }
               className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
             />
-            <input
-              type='text'
-              placeholder='源地址（支持 M3U/JSON/TXT/PHP 等返回）'
-              value={newLiveSource.url}
-              onChange={(e) =>
-                setNewLiveSource((prev) => ({ ...prev, url: e.target.value }))
-              }
-              className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-            />
+            <div className='flex gap-2'>
+              <input
+                type='text'
+                placeholder='源地址（支持 M3U/JSON/TXT/PHP 等返回）'
+                value={newLiveSource.url}
+                onChange={(e) =>
+                  setNewLiveSource((prev) => ({ ...prev, url: e.target.value }))
+                }
+                className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+              />
+              <button
+                type='button'
+                onClick={() => handleTestParse(newLiveSource.url)}
+                className={buttonStyles.primarySmall}
+              >
+                测试解析
+              </button>
+            </div>
             <div className='sm:col-span-2 text-xs text-gray-600 dark:text-gray-400'>
               支持的格式：
               <span className='font-medium'>M3U</span>（含 <code className='px-1 bg-gray-200 dark:bg-gray-700 rounded'>#EXTM3U</code>）、
@@ -5379,14 +5434,23 @@ const LiveSourceConfig = ({
               <label className='block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1'>
                 源地址（支持 M3U/JSON/TXT/PHP 等返回）
               </label>
-              <input
-                type='text'
-                value={editingLiveSource.url}
-                onChange={(e) =>
-                  setEditingLiveSource((prev) => prev ? ({ ...prev, url: e.target.value }) : null)
-                }
-                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-              />
+              <div className='flex gap-2'>
+                <input
+                  type='text'
+                  value={editingLiveSource.url}
+                  onChange={(e) =>
+                    setEditingLiveSource((prev) => prev ? ({ ...prev, url: e.target.value }) : null)
+                  }
+                  className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                />
+                <button
+                  type='button'
+                  onClick={() => handleTestParse(editingLiveSource.url)}
+                  className={buttonStyles.primarySmall}
+                >
+                  测试解析
+                </button>
+              </div>
               <p className='mt-1 text-xs text-gray-600 dark:text-gray-400'>
                 支持 M3U（带 <code className='px-1 bg-gray-200 dark:bg-gray-700 rounded'>#EXTM3U</code>）、JSON（对象或数组，含 <code className='px-1 bg-gray-200 dark:bg-gray-700 rounded'>name/url</code> 字段）、TXT（<code className='px-1 bg-gray-200 dark:bg-gray-700 rounded'>名称,http://...</code> 或 <code className='px-1 bg-gray-200 dark:bg-gray-700 rounded'>分组#名称#http://...</code>）。PHP 等脚本地址只需返回上述格式即可。
               </p>
@@ -5512,6 +5576,74 @@ const LiveSourceConfig = ({
         timer={alertModal.timer}
         showConfirm={alertModal.showConfirm}
       />
+
+      {/* 测试解析预览弹窗 */}
+      {previewOpen && (
+        createPortal(
+          <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50'>
+            <div className='w-full max-w-md rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl'>
+              <div className='px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between'>
+                <div className='flex items-center gap-2 text-gray-900 dark:text-gray-100'>
+                  <TestTube size={18} />
+                  <span className='text-sm font-semibold'>测试解析预览</span>
+                </div>
+                <button onClick={() => setPreviewOpen(false)} className='text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'>✕</button>
+              </div>
+              <div className='p-4 space-y-3'>
+                {previewLoading && (
+                  <div className='flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700'>
+                    <div className='animate-spin rounded-full h-4 w-4 border-2 border-blue-300 border-t-blue-600 dark:border-blue-700 dark:border-t-blue-400'></div>
+                    <span className='text-xs text-gray-700 dark:text-gray-300'>解析中...</span>
+                  </div>
+                )}
+                {!previewLoading && previewError && (
+                  <div className='px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-sm text-red-700 dark:text-red-300'>
+                    {previewError}
+                  </div>
+                )}
+                {!previewLoading && previewResult && (
+                  <div className='space-y-2 text-sm'>
+                    <div className='text-gray-700 dark:text-gray-300'>
+                      源地址：<span className='break-all text-gray-900 dark:text-gray-100'>{previewResult.url}</span>
+                    </div>
+                    {previewResult.contentType && (
+                      <div className='text-gray-700 dark:text-gray-300'>
+                        返回类型：<span className='text-gray-900 dark:text-gray-100'>{previewResult.contentType}</span>
+                      </div>
+                    )}
+                    <div className='text-gray-700 dark:text-gray-300'>
+                      频道数：<span className='font-semibold text-gray-900 dark:text-gray-100'>{previewResult.total}</span>
+                    </div>
+                    {previewResult.epgUrl && (
+                      <div className='text-gray-700 dark:text-gray-300'>
+                        识别到节目单：<span className='break-all text-gray-900 dark:text-gray-100'>{previewResult.epgUrl}</span>
+                      </div>
+                    )}
+                    <div className='mt-2'>
+                      <div className='text-gray-700 dark:text-gray-300 mb-1'>分组示例（Top）：</div>
+                      <div className='grid grid-cols-2 gap-2'>
+                        {previewResult.groups.length === 0 && (
+                          <span className='text-xs text-gray-500 dark:text-gray-400'>未分组或无法识别</span>
+                        )}
+                        {previewResult.groups.map((g) => (
+                          <div key={g.name} className='px-2 py-1 rounded bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex items-center justify-between'>
+                            <span className='text-xs text-gray-700 dark:text-gray-300 truncate'>{g.name}</span>
+                            <span className='text-xs font-mono text-gray-900 dark:text-gray-100'>{g.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className='px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end'>
+                <button onClick={() => setPreviewOpen(false)} className={buttonStyles.secondary}>关闭</button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      )}
 
 
     </div>

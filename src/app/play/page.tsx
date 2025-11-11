@@ -2224,10 +2224,10 @@ function PlayPageClient() {
       }
     }
 
-    // f 键 = 切换全屏
+    // f 键 = 切换网页全屏（确保自定义叠加层在全屏下可见）
     if (e.key === 'f' || e.key === 'F') {
       if (artPlayerRef.current) {
-        artPlayerRef.current.fullscreen = !artPlayerRef.current.fullscreen;
+        artPlayerRef.current.fullscreenWeb = !artPlayerRef.current.fullscreenWeb;
         e.preventDefault();
       }
     }
@@ -4268,7 +4268,7 @@ function PlayPageClient() {
                 </button>
 
                 {/* 清晰度/码率/网速徽章 - 放置在 ? 按钮右侧 */}
-                <div className='absolute left-14 top-4 z-10 flex flex-wrap items-center gap-2' onClick={() => setShowMetricsPanel(true)}>
+                <div className='absolute left-14 top-4 flex flex-wrap items-center gap-2' style={{ zIndex: 2147483647 }}>
                   {qualityInfo?.height && (
                     <span className='px-2 py-1 text-xs rounded-full bg-black/40 text-white border border-white/30 backdrop-blur-sm'>
                       {qualityInfo.height}p
@@ -4296,7 +4296,7 @@ function PlayPageClient() {
 
                 {/* 质量与实时指标面板 */}
                 {showMetricsPanel && (
-                  <div className='absolute left-4 top-14 z-10 min-w-[240px] max-w-[320px] p-3 rounded-xl bg-black/50 text-white border border-white/30 backdrop-blur-md shadow-lg'>
+                  <div className='absolute left-4 top-14 min-w-[240px] max-w-[320px] p-3 rounded-xl bg-black/50 text-white border border-white/30 backdrop-blur-md shadow-lg' style={{ zIndex: 2147483647 }}>
                     <div className='mb-2 text-xs opacity-80'>
                       模式：{qualityMode === 'auto' ? '自动档' : '已锁定'}
                     </div>

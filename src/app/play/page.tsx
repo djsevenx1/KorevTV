@@ -1847,10 +1847,13 @@ function PlayPageClient() {
                   // 通用关键词匹配：检查是否包含查询中的所有关键词
                   checkAllKeywordsMatch(queryTitle, resultTitle);
 
-                const yearMatch = videoYearRef.current
-                  ? result.year.toLowerCase() ===
-                    videoYearRef.current.toLowerCase()
-                  : true;
+                const yearMatch = (() => {
+                  const qy =
+                    (videoYearRef.current || '').match(/\d{4}/)?.[0] || '';
+                  if (!qy) return true;
+                  const ry = (result.year || '').match(/\d{4}/)?.[0] || '';
+                  return ry === qy;
+                })();
                 const typeMatch = searchType
                   ? (searchType === 'tv' && result.episodes.length > 1) ||
                     (searchType === 'movie' && result.episodes.length === 1)

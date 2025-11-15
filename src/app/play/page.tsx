@@ -5467,6 +5467,7 @@ function PlayPageClient() {
                                 <span className='relative text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-rose-600 to-pink-600 dark:from-pink-400 dark:via-rose-400 dark:to-pink-400 font-bold text-lg transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_2px_8px_rgba(236,72,153,0.5)]'>
                                   {bangumiDetails.rating.score}
                                 </span>
+                                <span className='ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-black/10 dark:bg-white/10 border border-white/20 text-gray-800 dark:text-gray-200'>Bangumi</span>
                                 <div className='flex ml-2 gap-0.5'>
                                   {[...Array(5)].map((_, i) => (
                                     <svg
@@ -5498,35 +5499,31 @@ function PlayPageClient() {
                           bangumiDetails.infobox.map(
                             (info: any, index: number) => {
                               if (info.key === '导演' && info.value) {
-                                const directors = Array.isArray(info.value)
-                                  ? info.value
-                                      .map((v: any) => v.v || v)
-                                      .join('、')
-                                  : info.value;
+                                const list = Array.isArray(info.value)
+                                  ? info.value.map((v: any) => v.v || v)
+                                  : [info.value];
                                 return (
-                                  <div key={index}>
-                                    <span className='font-semibold text-gray-700 dark:text-gray-300'>
-                                      导演:{' '}
-                                    </span>
-                                    <span className='text-gray-600 dark:text-gray-400'>
-                                      {directors}
+                                  <div key={index} className='mt-2'>
+                                    <span className='font-semibold text-gray-700 dark:text-gray-300 mr-2'>导演:</span>
+                                    <span className='inline-flex flex-wrap gap-2 chips-unify'>
+                                      {list.slice(0, 6).map((name: any, i: number) => (
+                                        <span key={i}>{String(name)}</span>
+                                      ))}
                                     </span>
                                   </div>
                                 );
                               }
                               if (info.key === '制作' && info.value) {
-                                const studios = Array.isArray(info.value)
-                                  ? info.value
-                                      .map((v: any) => v.v || v)
-                                      .join('、')
-                                  : info.value;
+                                const list = Array.isArray(info.value)
+                                  ? info.value.map((v: any) => v.v || v)
+                                  : [info.value];
                                 return (
-                                  <div key={index}>
-                                    <span className='font-semibold text-gray-700 dark:text-gray-300'>
-                                      制作:{' '}
-                                    </span>
-                                    <span className='text-gray-600 dark:text-gray-400'>
-                                      {studios}
+                                  <div key={index} className='mt-2'>
+                                    <span className='font-semibold text-gray-700 dark:text-gray-300 mr-2'>制作:</span>
+                                    <span className='inline-flex flex-wrap gap-2 chips-unify'>
+                                      {list.slice(0, 6).map((name: any, i: number) => (
+                                        <span key={i}>{String(name)}</span>
+                                      ))}
                                     </span>
                                   </div>
                                 );
@@ -5553,13 +5550,7 @@ function PlayPageClient() {
                             bangumiDetails.tags
                               .slice(0, 4)
                               .map((tag: any, index: number) => (
-                                <span
-                                  key={index}
-                                  className='relative group bg-gradient-to-r from-blue-500/90 to-indigo-500/90 dark:from-blue-600/90 dark:to-indigo-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105'
-                                >
-                                  <span className='absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
-                                  <span className='relative'>{tag.name}</span>
-                                </span>
+                                <span key={index}>{tag.name}</span>
                               ))}
                           {bangumiDetails.total_episodes && (
                             <span className='relative group bg-gradient-to-r from-green-500/90 to-emerald-500/90 dark:from-green-600/90 dark:to-emerald-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-500/30 transition-all duration-300 hover:scale-105'>
@@ -5588,6 +5579,7 @@ function PlayPageClient() {
                                 <span className='relative text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 via-amber-600 to-yellow-600 dark:from-yellow-400 dark:via-amber-400 dark:to-yellow-400 font-bold text-lg transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_2px_8px_rgba(251,191,36,0.5)]'>
                                   {movieDetails.rate}
                                 </span>
+                                <span className='ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-black/10 dark:bg-white/10 border border-white/20 text-gray-800 dark:text-gray-200'>豆瓣</span>
                                 <div className='flex ml-2 gap-0.5'>
                                   {[...Array(5)].map((_, i) => (
                                     <svg
@@ -5615,12 +5607,14 @@ function PlayPageClient() {
                         {/* 导演 */}
                         {movieDetails.directors &&
                           movieDetails.directors.length > 0 && (
-                            <div>
-                              <span className='font-semibold text-gray-700 dark:text-gray-300'>
-                                导演:{' '}
+                            <div className='mt-2'>
+                              <span className='font-semibold text-gray-700 dark:text-gray-300 mr-2'>
+                                导演:
                               </span>
-                              <span className='text-gray-600 dark:text-gray-400'>
-                                {movieDetails.directors.join('、')}
+                              <span className='inline-flex flex-wrap gap-2 chips-unify'>
+                                {movieDetails.directors.slice(0, 6).map((n: string, i: number) => (
+                                  <span key={i}>{n}</span>
+                                ))}
                               </span>
                             </div>
                           )}
@@ -5628,24 +5622,28 @@ function PlayPageClient() {
                         {/* 编剧 */}
                         {movieDetails.screenwriters &&
                           movieDetails.screenwriters.length > 0 && (
-                            <div>
-                              <span className='font-semibold text-gray-700 dark:text-gray-300'>
-                                编剧:{' '}
+                            <div className='mt-2'>
+                              <span className='font-semibold text-gray-700 dark:text-gray-300 mr-2'>
+                                编剧:
                               </span>
-                              <span className='text-gray-600 dark:text-gray-400'>
-                                {movieDetails.screenwriters.join('、')}
+                              <span className='inline-flex flex-wrap gap-2 chips-unify'>
+                                {movieDetails.screenwriters.slice(0, 6).map((n: string, i: number) => (
+                                  <span key={i}>{n}</span>
+                                ))}
                               </span>
                             </div>
                           )}
 
                         {/* 主演 */}
                         {movieDetails.cast && movieDetails.cast.length > 0 && (
-                          <div>
-                            <span className='font-semibold text-gray-700 dark:text-gray-300'>
-                              主演:{' '}
+                          <div className='mt-2'>
+                            <span className='font-semibold text-gray-700 dark:text-gray-300 mr-2'>
+                              主演:
                             </span>
-                            <span className='text-gray-600 dark:text-gray-400'>
-                              {movieDetails.cast.join('、')}
+                            <span className='inline-flex flex-wrap gap-2 chips-unify'>
+                              {movieDetails.cast.slice(0, 10).map((n: string, i: number) => (
+                                <span key={i}>{n}</span>
+                              ))}
                             </span>
                           </div>
                         )}
@@ -5668,25 +5666,13 @@ function PlayPageClient() {
                             movieDetails.countries
                               .slice(0, 2)
                               .map((country: string, index: number) => (
-                                <span
-                                  key={index}
-                                  className='relative group bg-gradient-to-r from-blue-500/90 to-cyan-500/90 dark:from-blue-600/90 dark:to-cyan-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105'
-                                >
-                                  <span className='absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
-                                  <span className='relative'>{country}</span>
-                                </span>
+                                <span key={index}>{country}</span>
                               ))}
                           {movieDetails.languages &&
                             movieDetails.languages
                               .slice(0, 2)
                               .map((language: string, index: number) => (
-                                <span
-                                  key={index}
-                                  className='relative group bg-gradient-to-r from-purple-500/90 to-pink-500/90 dark:from-purple-600/90 dark:to-pink-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105'
-                                >
-                                  <span className='absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
-                                  <span className='relative'>{language}</span>
-                                </span>
+                                <span key={index}>{language}</span>
                               ))}
                           {movieDetails.episodes && (
                             <span className='relative group bg-gradient-to-r from-green-500/90 to-emerald-500/90 dark:from-green-600/90 dark:to-emerald-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-500/30 transition-all duration-300 hover:scale-105'>

@@ -85,6 +85,18 @@ function LoginPageClient() {
 
   const { siteName } = useSite();
 
+  const cleanRedirect = (input: string | null) => {
+    if (!input) return '/';
+    try {
+      const url = new URL(input, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+      url.searchParams.delete('ide_webview_request_time');
+      const qs = url.searchParams.toString();
+      return qs ? `${url.pathname}?${qs}` : url.pathname || '/';
+    } catch {
+      return '/';
+    }
+  };
+
   // 获取 Bing 每日壁纸（通过代理 API）
   useEffect(() => {
     const fetchBingWallpaper = async () => {
@@ -169,7 +181,7 @@ function LoginPageClient() {
           // 登入时间记录失败不影响正常登录流程
         }
 
-        const redirect = searchParams.get('redirect') || '/';
+        const redirect = cleanRedirect(searchParams.get('redirect')) || '/';
         router.replace(redirect);
       } else if (res.status === 401) {
         setError('密码错误');
@@ -349,7 +361,7 @@ function LoginPageClient() {
           <div className='mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between'>
             <span>{shouldAskUsername ? '账户密码模式' : '本地密码模式'}</span>
             {searchParams.get('redirect') && (
-              <span>登录后将前往 {decodeURIComponent(searchParams.get('redirect') || '')}</span>
+              <span>登录后将前往 {cleanRedirect(searchParams.get('redirect'))}</span>
             )}
           </div>
 
